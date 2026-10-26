@@ -34,6 +34,7 @@ const (
 
 func printUsage() {
 	fmt.Printf("Usage: %s [-f/--foreground] INTERFACE-NAME\n", os.Args[0])
+	fmt.Printf("       %s --packet-stdio UAPI-FILE\n", os.Args[0])
 }
 
 func warning() {
@@ -58,6 +59,18 @@ func warning() {
 }
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "--packet-stdio" {
+		if len(os.Args) != 3 {
+			fmt.Fprintln(os.Stderr, "Usage: amneziawg-go --packet-stdio UAPI-FILE")
+			os.Exit(ExitSetupFailed)
+		}
+		if err := runPacketMode(os.Args[2]); err != nil {
+			fmt.Fprintln(os.Stderr, "ERROR AmneziaWG:", err)
+			os.Exit(ExitSetupFailed)
+		}
+		return
+	}
+
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
 		fmt.Printf("amneziawg-go %s\n\nUserspace AmneziaWG daemon for %s-%s.\nInformation available at https://amnezia.org\n", Version, runtime.GOOS, runtime.GOARCH)
 		return

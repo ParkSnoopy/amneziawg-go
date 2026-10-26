@@ -25,6 +25,25 @@ When an interface is running, you may use [`amneziawg-tools `](https://github.co
 
 To run with more logging you may set the environment variable `LOG_LEVEL=debug`.
 
+### Packet-stream mode
+
+On Unix platforms, an external tunnel owner can exchange IP packets with the same executable without creating an OS interface or UAPI socket:
+
+```sh
+amneziawg-go --packet-stdio /private/session.uapi
+```
+
+The startup file contains native UAPI settings, not an INI configuration, and must be protected by the caller.
+The process stays in the foreground and writes exactly `RDY\n` to stdout after consuming the configuration and starting the device; the caller may then remove the file.
+Each subsequent stdin/stdout packet is a four-byte unsigned big-endian length followed by one complete IPv4 or IPv6 packet, bounded to 65,535 bytes.
+The device MTU is 1,380 bytes.
+Stdout is reserved for readiness and packet frames; diagnostics go to stderr without configuration contents.
+Clean stdin EOF, SIGINT or SIGTERM stops the device; malformed or truncated frames fail the process.
+The caller retains ownership of routes, DNS and the operating-system VPN lifecycle.
+Existing interface and inherited-descriptor modes remain unchanged, and Windows does not expose this CLI mode.
+
+Run `go test -race -count=1 .` to exercise actual CLI startup, encrypted IPv4/IPv6 packet exchange, framing rejection and teardown without creating an OS tunnel.
+
 ## Platforms
 
 ### Linux
